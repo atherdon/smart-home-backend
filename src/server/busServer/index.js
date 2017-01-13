@@ -24,7 +24,7 @@ function busServer(props) {
       /* Provide initial bus-state */
       const smState = client.record.getRecord('busState');
       smState.whenReady((bs) => {
-        busState.take(1).onValue((v) => {
+        busState.onValue((v) => {
           bs.set(v.toJS());
         });
       });
@@ -34,7 +34,6 @@ function busServer(props) {
         client.event.emit('knx/event', event);
       };
 
-      /* PENDING: smart-home-app is not yet ready to dynamically sub-/unsub to KNX-events: */
       client.event.listen('knx/event', (eventName, isSubscribed, response) => {
         console.log(`[knx-event-handler] Someone subscribed to <${eventName}>: ${isSubscribed}`);
         if (isSubscribed) {
