@@ -11,14 +11,14 @@ const config:Config = {
     port: process.env.PORT || '3005'/* TODO: no longer used?! */
   },
   knxd: {
-    //   host: '192.168.1.28', /* like '192.168.1.28' or 'localhost'  */
-    host: 'localhost', /* like '192.168.1.28' or 'localhost'  */
+    host: '192.168.1.28', /* like '192.168.1.28' or 'localhost'  */
+    //     host: 'localhost', /* like '192.168.1.28' or 'localhost'  */
     port: '6720',
     isAvailable: true
   },
   wsServer: {
-    host: 'localhost',
-    //   host: '192.168.1.28',
+    //     host: 'localhost',
+    host: '192.168.1.28',
     port: '6020',
     user: 'smartHomeBackend',
   },
@@ -28,7 +28,11 @@ const config:Config = {
   },
   logging: {
     logBusStateOnEvent: false,
-    logBusEvents: true
+    logBusEvents: false,
+  },
+  /* Enable / disable some modules / functionality */
+  modules: {
+    addressRefresher: false,
   },
   knx: {
     addresses,
