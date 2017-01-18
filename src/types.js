@@ -1,5 +1,10 @@
 // @flow
 
+import type {Observable} from 'kefir';
+
+export type BusState = Observable<Object>;
+export type BusEvent = Observable<Object>;
+
 export type Address = {
   id: string,
   name: string,
@@ -31,6 +36,9 @@ export type Config = {
   logging: {
     logBusStateOnEvent: boolean,
     logBusEvents: boolean,
+  },
+  modules: {
+    addressRefresher: boolean,
   },
   knx: {
     addresses: AddressList,

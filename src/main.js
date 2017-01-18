@@ -12,7 +12,7 @@ cron(busState);
 /* Setup and configure (websocket-/http-) server and pass event-emitters along
    for use in plugins et. al. */
 server({
-  conf: config.wsServer,
+  conf: config,
   streams: {
     busEvents,
     busState,
