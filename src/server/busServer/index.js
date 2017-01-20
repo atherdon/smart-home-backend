@@ -19,6 +19,7 @@ import K from 'kefir';
 
 import handleBusWrites from './handleBusWrites';
 import handleBusEvents from './handleBusEvents';
+import updateRemoteInitialState from './handleInitialState';
 
 type Props = {
   conf: Config,
@@ -42,22 +43,10 @@ function busServer(props: Props) {
     });
   }));
 
-  /* Handles initial-bus-state requests */
-  const updateRemoteInitialState = (client) => {
-    const smState = client.record.getRecord('busState');
-    smState.whenReady((bs) => {
-      busState.onValue((v) => {
-        console.log('[busServer] Setting initial bus-state on deepstream-server');
-        bs.set(v.toJS());
-      })
-    })
-  };
-
-
   /* Setup event-handlers for all bus-events / streams we've got: */
   const deepstreamService$ = connectClient$.observe({
     value(client) {
-      updateRemoteInitialState(client);
+      updateRemoteInitialState(client, busState);
       handleBusWrites(client);
       handleBusEvents(client, busEvents);
     },
@@ -66,7 +55,7 @@ function busServer(props: Props) {
       console.error(error);
     },
     end() {
-      console.log(`[busServer] deepstream-server connection done.`);
+      console.info(`[busServer] deepstream-server connection-process ended.`);
     }
   });
 

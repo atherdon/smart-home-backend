@@ -1,35 +1,46 @@
-/* eslint no-console: "off" */
+/* @flow */
+import type { BusState } from '../../types';
+import K from 'kefir';
+import R from 'ramda';
 
-/* Replies to 'initialstate'-Websocket requests by emitting the current
-   bus-state downstream */
-import createRequestStream from '../../streams/initialBusStateRequests';
+/* Handles initial-bus-state requests */
+function updateRemoteInitialState(client: any, busState: BusState) {
 
-function errorHandler(error) {
-  console.warn(error);
-}
+  /* TODO: Need better state-management and cleanup here.
+   * Also handle unlistening-case: client.record.unlisten('knx/initialBusState', callback) */
 
-function handleInitialState(io, stream) {
-  io.on('connection', (socket) => {
-    function sendState(state) {
-      console.log(`~~~ Emitting initial / full (smart-home-) state: ${JSON.stringify(state)}`);
-      socket.emit('initialstate', state.toJS());
+  // const isSubscribed$ = K.fromCallback((subscriptionChanged) => {
+  //   client.record.listen('busState', )
+  // });
+
+  const putBusStateIntoEther = R.curry(
+    (bsRecord, state) => {
+      console.info('[busServer] Setting initial bus-state on deepstream-server');
+      bsRecord.set(state.toJS());
     }
+  );
 
-    const stateRequestStream = createRequestStream(socket);
-    const triggerStateRespone = stream.sampledBy(stateRequestStream);
-
-    function disconnectHndlr() {
-      console.log('~~~ Some client unsubscribed from initialstate-stream');
-      triggerStateRespone.offValue(sendState)
-                         .offError(errorHandler);
-    }
-
-    triggerStateRespone.onValue(sendState)
-                       .onError(errorHandler);
-
-    io.sockets.removeListener('disconnect', disconnectHndlr);
-    io.on('disconnect', disconnectHndlr);
+  client.record.getRecord('knx/initialBusState').whenReady((bsRecord) => {
+    busState.onValue(putBusStateIntoEther(bsRecord));
   });
+
+  const callback = (match, isSubscribed, response) => {
+    console.log('[handleInitialState] Handling subscriptionChanged...');
+    if (isSubscribed) {
+      console.log('[handleInitialState] Someone subscribed to initial busState records');
+      response.accept();
+    } else {
+      console.log('[handleInitialState] Unsubscribing to delivering initial busState records');
+      busState.offValue(putBusStateIntoEther);
+      client.record.getRecord('knx/initialBusState').discard();
+      //       response.reject();
+    }
+  };
+
+  /* PENDING: Due to a bug in Deepstream-server <= v2.1.2 a error is emitted when subscribing here - see
+     https://github.com/deepstreamIO/deepstream.io/issues/531 */
+  //   client.record.listen('knx/initialBusState', callback);
+
 }
 
-export default handleInitialState;
+export default updateRemoteInitialState;
